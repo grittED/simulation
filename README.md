@@ -33,7 +33,7 @@ Clone this repository in your catkin workspace 'src/' folder.
 ```sh
 mkdir -p catkin_ws/src
 cd ~/catkin_ws/src/
-git clone git@github.com:grittED/simulation.git
+git clone https://github.com/grittED/simulation.git
 ```
 
 Build the project:
@@ -43,9 +43,18 @@ catkin_make
 ```
 
 If you haven’t already, the following line can be added to your .bashrc to auto-source all new terminals
+This can be done by:
+```sh
+cd ~
+vim .bashrc
 ```
+Head to a clear space in the file and then insert (*i*) the following lines
+```sh
 source ~/catkin_ws/devel/setup.bash
+source /opt/ros/noetic/setup.bash
 ```
+
+Close the terminal, then when the next time you open the terminal (for the next steps), the above scripts will be automatically run.
 
 ## Run the Code
 
