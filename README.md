@@ -1,7 +1,7 @@
 # ROS Localisation and Navigation using Adaptive Monte Carlo Localisation (AMCL) with a skid-steer robot
 
 This repository contains a Robot Operating System (ROS) implementation of a skid-steer robot model for uses with the ROS navigation stack.
-The model uses the Adaptive Monte Carlo Localisation (AMCL) method for localisation with the Elastic band planner method to navigate to goal locations. This planner is not available in the latest editions of ROS however, so this is liable to change.
+The model uses the Adaptive Monte Carlo Localisation (AMCL) method for localisation with the Timed Elastic band planner method to navigate to goal locations. The original Elastic Band planner is not available in the latest editions of ROS however, so it was changed and is liable to change.
 
 ![skid-steer robot model](images/skid-steer-bot.png)
 
@@ -22,7 +22,7 @@ sudo apt-get update
 sudo apt-get install ros-noetic-move-base
 sudo apt-get install ros-noetic-map-server
 sudo apt-get install ros-noetic-amcl
-sudo apt-get install ros-noetic-eband-local-planner
+sudo apt-get install ros-noetic-teb-local-planner
 sudo apt-get install ros-noetic-global-planner
 ```
 
