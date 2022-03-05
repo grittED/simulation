@@ -2,12 +2,58 @@
 <launch>
 
   <!-- Map server -->
-  <arg name="map_file" default="$(find skid_steer_bot)/maps/jackal_race.yaml"/>
-  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
+  <!-- <arg name="map_file" default="$(find skid_steer_bot)/maps/jackal_race.yaml"/> -->
+  <!-- <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" /> -->
+
+  <!-- imu launcher-->
+  <include file="$(find mpu9250_node)/launch/mpu9250.launch"/>
+
+  <node pkg="skid_steer_bot" name="left_Motor_Control" type="left_Motor_Control.py" output="screen"/>
+  <node pkg="skid_steer_bot" name="right_Motor_Control" type="right_Motor_Control.py" output="screen"/>
+  <node pkg="skid_steer_bot" name="vel_converter" type="vel_converter.py" output="screen"/>
+  <node pkg="skid_steer_bot" name="encoder_driver" type="encoder_driver.py" output="screen"/>
+  <node pkg="skid_steer_bot" name="planner" type="planner.py" output="screen"/>
 
   <!-- Place map frame at odometry frame -->
-  <node pkg="tf" type="static_transform_publisher" name="map_odom_broadcaster"
-      args="0 0 0 0 0 0 map odom 100"/>
+  <!-- Transformation Configuration ... Setting Up the Relationships Between Coordinate Frames -->
+  <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.06 0 0.08 0 0 0 base_link laser 30" />
+  <node pkg="tf" type="static_transform_publisher" name="imu_broadcaster" args="0 0.06 0.02 0 0 0 base_link imu 30" />
+  <node pkg="tf" type="static_transform_publisher" name="base_link_broadcaster" args="0 0 0.09 0 0 0 base_footprint base_link 30" />
+  <!-- odom to base_footprint transform will be provided by the robot_pose_ekf node -->
+  <!-- map to odom will be provided by the AMCL -->
+  <node pkg="tf" type="static_transform_publisher" name="map_to_odom" args="0 0 0 0 0 0 map odom 30" />
+
+  <node name="right_pid" pkg="pid" type="controller" output="screen" >
+    <param name="Kp" value="4.0" />
+    <param name="Ki" value="0.0" />
+    <param name="Kd" value="0.0" />
+    <param name="rate" value="20" />
+    <param name="upper_limit" value="10" />
+    <param name="lower_limit" value="-10" />
+    <param name="windup_limit" value="10" />
+    <param name="cutoff_frequency" value="20" />
+    <param name="diagnostic_period" value="0.25" />
+    <param name="topic_from_controller" value="control/right" />
+    <param name="topic_from_plant" value="vel/right" />
+    <param name="setpoint_topic" value="setpoint/right" />
+
+  </node>
+
+  <node name="left_pid" pkg="pid" type="controller" output="screen" >
+    <param name="Kp" value="4.0" />
+    <param name="Ki" value="0.0" />
+    <param name="Kd" value="0.0" />
+    <param name="rate" value="20" />
+    <param name="upper_limit" value="10" />
+    <param name="lower_limit" value="-10" />
+    <param name="windup_limit" value="10" />
+    <param name="cutoff_frequency" value="20" />
+    <param name="diagnostic_period" value="0.25" />
+    <param name="topic_from_controller" value="control/left" />
+    <param name="topic_from_plant" value="vel/left" />
+    <param name="setpoint_topic" value="setpoint/left" />
+
+  </node>
 
   <!-- Localization-->
   <node pkg="amcl" type="amcl" name="amcl" output="screen">
@@ -83,6 +129,24 @@
     <!-- Translation-related noise parameter (only used if model is "omni"). -->
     <param name="odom_alpha5" value="0.2"/> <!-- 0.2 -->
 
+  </node>
+
+  <!-- Extended Kalman Filter from robot_pose_ekf Node-->
+  <!-- Subscribe: /odom, /imu_data, /vo -->
+  <!-- Publish: /robot_pose_ekf/odom_combined -->
+  <remap from="odom" to="odom_data_quat" />
+  <remap from="imu_data" to="data_raw" />
+  <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
+    <param name="output_frame" value="odom"/>
+    <param name="base_footprint_frame" value="base_footprint"/>
+    <param name="freq" value="30.0"/>
+    <param name="sensor_timeout" value="1.0"/>
+    <param name="odom_used" value="true"/>
+    <param name="imu_used" value="true"/>
+    <param name="vo_used" value="false"/>
+    <param name="gps_used" value="false"/>
+    <param name="debug" value="false"/>
+    <param name="self_diagnose" value="false"/>
   </node>
 
   <!-- Move base -->

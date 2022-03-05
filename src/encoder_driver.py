@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 
-import math
-from math import sin, cos, pi
+from math import sin, cos
 
 import rospy
 import tf
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 
-rospy.init_node('odom_data_quan1')
+rospy.init_node('encoder_driver')
 
 odom_pub = rospy.Publisher("odom", Odometry, queue_size=50)
 odom_broadcaster = tf.TransformBroadcaster()
@@ -17,15 +16,17 @@ x = 0.0
 y = 0.0
 th = 0.0
 
-vx = speed #(right_speed + left_speed)/2
-vy = 0
-vth = ((right_speed - left_speed)/lengthWheelBase)
-
-current_time = rospy.Time.now()
-last_time = rospy.Time.now()
-
 r = rospy.Rate(1.0)
+
+
 while not rospy.is_shutdown():
+    vx = (right_speed + left_speed)/2
+    vy = 0
+    vth = ((right_speed - left_speed)/lengthWheelBase)
+
+    current_time = rospy.Time.now()
+    last_time = rospy.Time.now()
+
     current_time = rospy.Time.now()
 
     # compute odometry in a typical way given the velocities of the robot
@@ -66,17 +67,4 @@ while not rospy.is_shutdown():
     odom_pub.publish(odom)
 
     last_time = current_time
-    r.sleep(
-
-# call the class
-def main(args):
-    odom = odom_data_quan1()
-    try:
-        rospy.spin()
-    except KeyboardInterrupt:
-        print("Shutting down")
-    cv2.destroyAllWindows()
-
-# run the code if the node is called
-if __name__ == '__main__':
-    main(sys.argv)
+    r.sleep()
