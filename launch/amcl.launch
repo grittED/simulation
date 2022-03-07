@@ -2,23 +2,26 @@
 <launch>
 
   <!-- Map server -->
-  <!-- <arg name="map_file" default="$(find skid_steer_bot)/maps/jackal_race.yaml"/> -->
-  <!-- <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" /> -->
+  <arg name="map_file" default="$(find skid_steer_bot)/maps/jackal_race.yaml"/>
+  <node name="map_server" pkg="map_server" type="map_server" args="$(arg map_file)" />
 
-  <!-- imu launcher-->
-  <include file="$(find mpu9250_node)/launch/mpu9250.launch"/>
+  <!-- imu launcher--> 
+  <!-- <node pkg="rt_usb_9axisimu_driver" type="rt_usb_9axisimu_driver" name="rt_usb_9axisimu_driver" required="true" output="screen">
+    <param name="port" value="/dev/ttyACM0" />
+    <param name="frame_id" value="imu" />
+  </node> -->
 
-  <node pkg="skid_steer_bot" name="left_Motor_Control" type="left_Motor_Control.py" output="screen"/>
-  <node pkg="skid_steer_bot" name="right_Motor_Control" type="right_Motor_Control.py" output="screen"/>
+  <node pkg="skid_steer_bot" name="motor_control" type="motor_control.py" output="screen"/>
   <node pkg="skid_steer_bot" name="vel_converter" type="vel_converter.py" output="screen"/>
   <node pkg="skid_steer_bot" name="encoder_driver" type="encoder_driver.py" output="screen"/>
-  <node pkg="skid_steer_bot" name="planner" type="planner.py" output="screen"/>
+  <!-- <node pkg="skid_steer_bot" name="planner" type="planner.py" output="screen"/> -->
 
   <!-- Place map frame at odometry frame -->
   <!-- Transformation Configuration ... Setting Up the Relationships Between Coordinate Frames -->
   <node pkg="tf" type="static_transform_publisher" name="base_link_to_laser" args="0.06 0 0.08 0 0 0 base_link laser 30" />
   <node pkg="tf" type="static_transform_publisher" name="imu_broadcaster" args="0 0.06 0.02 0 0 0 base_link imu 30" />
-  <node pkg="tf" type="static_transform_publisher" name="base_link_broadcaster" args="0 0 0.09 0 0 0 base_footprint base_link 30" />
+  <node pkg="tf" type="static_transform_publisher" name="base_link_broadcaster" args="0 0 -0.09 0 0 0 base_link base_footprint 30" />
+  <node pkg="tf" type="static_transform_publisher" name="faux_base" args="0 0 0 0 0 0 base_link base_link_faux 30" />
   <!-- odom to base_footprint transform will be provided by the robot_pose_ekf node -->
   <!-- map to odom will be provided by the AMCL -->
   <node pkg="tf" type="static_transform_publisher" name="map_to_odom" args="0 0 0 0 0 0 map odom 30" />
@@ -113,7 +116,7 @@
     <!-- Which frame to use for odometry. -->
     <param name="odom_frame_id" value="odom"/> <!-- odom -->
     <!-- Which frame to use for the robot base -->
-    <param name="base_frame_id" value="robot_footprint"/>
+    <param name="base_frame_id" value="base_link"/>
     <!-- The name of the coordinate frame published by the localization system -->
     <param name="global_frame_id" value="map"/>
     <!-- Specifies the expected noise in odometry's rotation estimate from the
@@ -134,7 +137,7 @@
   <!-- Extended Kalman Filter from robot_pose_ekf Node-->
   <!-- Subscribe: /odom, /imu_data, /vo -->
   <!-- Publish: /robot_pose_ekf/odom_combined -->
-  <remap from="odom" to="odom_data_quat" />
+  <!-- <remap from="odom" to="odom_data_quat" />
   <remap from="imu_data" to="data_raw" />
   <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
     <param name="output_frame" value="odom"/>
@@ -147,6 +150,10 @@
     <param name="gps_used" value="false"/>
     <param name="debug" value="false"/>
     <param name="self_diagnose" value="false"/>
+  </node> -->
+
+  <node pkg="robot_localization" type="ekf_localization_node" name="ekf_localization">
+    <rosparam command="load" file="$(find skid_steer_bot)/config/localization.yaml" />
   </node>
 
   <!-- Move base -->
@@ -158,8 +165,8 @@
     <rosparam file="$(find skid_steer_bot)/config/base_local_planner_params.yaml" command="load" />
 
     <remap from="cmd_vel" to="cmd_vel"/>
-    <remap from="odom" to="odom"/>
-    <remap from="scan" to="skid_steer_bot/laser/scan"/>
+    <remap from="odom" to="odometry/filtered"/>
+    <remap from="scan" to="/skid_steer_bot/laser/scan"/>
 
     <!-- A fast, interpolated global planner built as a more flexible replacement to navfn.
     (navfn/NavfnROS, global_planner/GlobalPlanner, carrot_planner/CarrotPlanner) -->
